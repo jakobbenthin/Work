@@ -1,0 +1,15 @@
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\Antal_PC.exe.config
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\Antal_PC.exe
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\Antal_PC.pdb
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.csproj.AssemblyReference.cache
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.Properties.Resources.resources
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.csproj.GenerateResource.cache
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.csproj.CoreCompileInputs.cache
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.exe
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.pdb
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.Form1.resources
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\Microsoft.PowerShell.SDK.dll
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\System.CodeDom.dll
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\System.Management.Automation.dll
+C:\rep\C#\Reports\Antal_PC\Antal_PC\bin\Debug\System.CodeDom.xml
+C:\rep\C#\Reports\Antal_PC\Antal_PC\obj\Debug\Antal_PC.csproj.CopyComplete

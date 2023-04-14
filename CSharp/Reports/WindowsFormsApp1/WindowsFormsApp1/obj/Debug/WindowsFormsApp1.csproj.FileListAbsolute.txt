@@ -1,0 +1,13 @@
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe.config
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.exe
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\WindowsFormsApp1.pdb
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\Microsoft.PowerShell.SDK.dll
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\System.Management.Automation.dll
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\bin\Debug\System.Management.Automation.xml
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.AssemblyReference.cache
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.Properties.Resources.resources
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.GenerateResource.cache
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.CoreCompileInputs.cache
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.csproj.CopyComplete
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.exe
+C:\rep\C#\Reports\WindowsFormsApp1\WindowsFormsApp1\obj\Debug\WindowsFormsApp1.pdb
