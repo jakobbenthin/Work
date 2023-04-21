@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Microsoft.Office.Interop.Excel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
 
 namespace Antal_PC
@@ -18,44 +20,58 @@ namespace Antal_PC
 
 
 
-        public List<string> CheckDepartmentsInPCFile()
+        public Dictionary<string, int> CheckDepartmentsInPCFile()
         {
             Excel.Application excel = new Excel.Application();
             Excel.Workbook workbook = excel.Workbooks.Open(this.antalPCFile);
             Excel.Worksheet sheet = workbook.Sheets[this.antalPCSheet];
 
-            // Copy the sheet
-            sheet.Copy(Type.Missing, workbook.Sheets[workbook.Sheets.Count]);
 
-            // Get a reference to the new sheet
-            Excel.Worksheet newSheet = (Excel.Worksheet)workbook.Sheets[workbook.Sheets.Count];
+            try
+            {
+                // Get a reference to the table
+                Excel.ListObject table = sheet.ListObjects["Innevarandemånadtabell"];
 
-            // Get the current year and last month number
-            DateTime currentDate = DateTime.Now;
-            string sheetName = currentDate.Year.ToString() + "-" + currentDate.AddMonths(-1).ToString("MM");
+                // Get a reference to the column that you want to remove the color from
+                Excel.Range columnToClear = table.ListColumns[6].Range;
 
-            // Change the name of the new sheet to the year and last month number
-            newSheet.Name = sheetName;
+                // Remove the color from the column
+                columnToClear.Interior.ColorIndex = Excel.XlColorIndex.xlColorIndexNone;
 
-            // Save the workbook
-            workbook.Save();
+                // Copy the sheet
+                sheet.Copy(Type.Missing, workbook.Sheets[workbook.Sheets.Count]);
+
+                // Get a reference to the new sheet
+                Excel.Worksheet newSheet = (Excel.Worksheet)workbook.Sheets[workbook.Sheets.Count];
+
+                // Get the current year and last month number
+                DateTime currentDate = DateTime.Now;
+                string sheetName = currentDate.Year.ToString() + "-" + currentDate.AddMonths(-1).ToString("MM");
+
+                // Change the name of the new sheet to the year and last month number
+                newSheet.Name = sheetName;
+
+                // Save the workbook
+                workbook.Save();
+            }
+            catch { }
 
             Excel.Range usedRange = sheet.UsedRange;
-
-
-
 
             int rowCount = usedRange.Rows.Count;
 
             int columnIndexA = 4;
             int columnIndexB = 7;
+            int columnIndexC = 6;
 
-            List<string> columnData = new List<string>();
+            Dictionary<string, int> columnData = new Dictionary<string, int>();
 
             for(int i = 2; i <= rowCount; i++)
             {
                 object valueA = usedRange.Cells[i, columnIndexA].Value;
                 object valueB = usedRange.Cells[i, columnIndexB].Value;
+                double valueC = usedRange.Cells[i, columnIndexC].Value;
+                int count = Convert.ToInt32(valueC);
 
                 if (valueB == null)
                 {
@@ -63,15 +79,11 @@ namespace Antal_PC
                 }
                 if (valueB.ToString() == "Capio dator")
                 {
-                    if (valueA.ToString() == "Kostnadsställe")
-                    {
-                        string s = "";
-                    }
                     string currentValue = valueA.ToString();
-
-                    if (!columnData.Contains(currentValue))
+                 
+                    if (!columnData.ContainsKey(currentValue))
                     {
-                        columnData.Add(valueA.ToString());
+                        columnData.Add(valueA.ToString(), count);
                     }
                 }
             }
@@ -165,6 +177,147 @@ namespace Antal_PC
 
             return columnData;
 
+        }
+        public void WriteDataToExcel(Dictionary<string, int> dictionary, Dictionary<string, int> diff, Dictionary<string, int> antalPCdict)
+        {
+            // Create an Excel application object
+            Excel.Application excelApp = new Excel.Application();
+
+            // Open the Excel workbook containing the table you want to update
+            Excel.Workbook workbook = excelApp.Workbooks.Open(this.antalPCFile);
+
+            // Get the worksheet containing the table
+            Excel.Worksheet worksheet = workbook.Worksheets[this.antalPCSheet];
+
+            // Get a reference to the table
+            Excel.ListObject table = worksheet.ListObjects["Innevarandemånadtabell"];
+
+            // Loop through the table rows
+            foreach (Excel.ListRow row in table.ListRows)
+            {
+                // Get the value from the first column of the current row
+                string dictkey = row.Range[4].Value.ToString();
+                string computerType = row.Range[7].Value.ToString();
+                
+
+                // Check if the value exists in the dictionary
+                if (dictionary.ContainsKey(dictkey) && computerType != "Extern dator")
+                {
+                    // Get the value from the dictionary
+                    int dictValue = dictionary[dictkey];
+                    int antalPCValue = antalPCdict[dictkey];
+
+                    int pcDiff = dictValue - antalPCValue;
+
+                    // Update the value in the column with amount of computers of the current row
+                    Excel.Range cellToUpdate = row.Range[6];
+                    cellToUpdate.Value = dictValue;
+                    cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Green);
+
+                    cellToUpdate = row.Range[10];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+
+                    cellToUpdate = row.Range[11];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2*12";
+
+                    cellToUpdate = row.Range[8];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+
+                    cellToUpdate = row.Range[12];
+                    cellToUpdate.Value = pcDiff;
+                    if(pcDiff > 10)
+                    {
+                        cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                    }
+                    if(pcDiff < -10)
+                    {
+                        cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+                    }
+
+
+                }
+                // Checks if value not exists in dictionary, == not in the ivantiFile
+                if (!dictionary.ContainsKey(dictkey) && computerType != "Extern dator")
+                {
+                    Excel.Range cellToUpdate = row.Range[6];
+                    cellToUpdate.Value = 0; //?
+                    cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Orange);
+
+                    cellToUpdate = row.Range[10];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+
+                    cellToUpdate = row.Range[11];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2*12";
+
+                    cellToUpdate = row.Range[8];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+
+                }
+                if(computerType ==  "Extern dator")
+                {
+                    Excel.Range cellToUpdate = row.Range[6];
+                    cellToUpdate = row.Range[10];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$3";
+
+                    cellToUpdate = row.Range[11];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$3*12";
+
+                    cellToUpdate = row.Range[8];
+                    cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$3";
+
+                }
+
+
+            }
+            
+            // Add missing key to table
+            foreach (var kvp in diff)
+            {
+                Excel.ListRow newRow = table.ListRows.Add();
+                newRow.Range[4].Value = kvp.Key;
+                newRow.Range[6].Value = kvp.Value;
+                newRow.Range[7].Value = "Capio dator";
+                Excel.Range cellToUpdate = newRow.Range[6];
+                cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
+
+                cellToUpdate = newRow.Range[10];
+                cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+
+                cellToUpdate = newRow.Range[11];
+                cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2*12";
+
+                cellToUpdate = newRow.Range[8];
+                cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+            }
+            
+            // Save the workbook
+            workbook.Save();
+
+            // Close the workbook and Excel application objects
+            //workbook.Close();
+            excelApp.Visible = true;
+            //excelApp.Quit();
+
+        }
+
+        public string CheckIfDictionaryKeyExists(Dictionary<string, int> dictionary, string value)
+        {
+            string kst = null;
+            bool check = false;
+            foreach (KeyValuePair<string, int> entry in dictionary)
+            {
+                kst = entry.Key;
+                if(value == entry.Key)
+                {
+                    check = true;
+                    break;
+                }
+            }
+            if(check)
+            {
+                return null;
+            }
+            return kst;
         }
 
     }

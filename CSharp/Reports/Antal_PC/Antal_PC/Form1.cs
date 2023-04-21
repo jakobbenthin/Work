@@ -13,6 +13,7 @@ using Microsoft.PowerShell;
 using System.IO;
 using System.Linq;
 using System.Collections;
+using System.Threading;
 
 namespace Antal_PC
 {
@@ -28,20 +29,100 @@ namespace Antal_PC
 
         private void button1_Click(object sender, EventArgs e)
         {
-            ex.ivantiFile = textBox1.Text;
-            ex.ivantiSheet = "Grunddata";
-            var ivantiDepartments = ex.CheckDepartmentsInIvantiFile();
+            if (textBox1.Text != "" && textBox2.Text != "")
+            {
+                status_lb.Items.Clear();
+                SetStatusLb("Startar rapport...");
+                ex.ivantiFile = BackupFile(textBox1.Text);
+                ex.ivantiSheet = "Grunddata";
+                SetStatusLb($"Öppnar {ex.ivantiFile}");
+                SetStatusLb($"Aktivt Sheet är '{ex.ivantiSheet}'");
+                SetStatusLb($"Bearbetar Ivanti data...");
 
-            ex.antalPCFile = textBox2.Text;
-            ex.antalPCSheet = "Innevarnde Månad";
-            var antalPCDep = ex.CheckDepartmentsInPCFile();
+                var ivantiDepartments = ex.CheckDepartmentsInIvantiFile();
 
-            //List<string> ivantiDiff = CheckIvantiDepList(ivantiDepartments, antalPCDep);
-            //List<string> pcDiff = CheckPCDepList(ivantiDepartments, antalPCDep);
+                SetStatusLb($"Antal KST i ivanti {ivantiDepartments.Count.ToString()}");
+                SetStatusLb($"------------------------------");
+
+
+                ex.antalPCFile = BackupFile(textBox2.Text);
+                ex.antalPCSheet = "Innevarnde Månad";
+                SetStatusLb($"Öppnar {ex.antalPCFile}");
+                SetStatusLb($"Sheet är '{ex.antalPCSheet}'");
+                SetStatusLb($"Bearbetar Antal PC data...");
+
+                var antalPCDep = ex.CheckDepartmentsInPCFile();
+
+                SetStatusLb($"Antal KST i Antal PC {antalPCDep.Count.ToString()}");
+                SetStatusLb($"------------------------------");
+                //List<string> ivantiDiff = CheckIvantiDepList(ivantiDepartments, antalPCDep);
+                //List<string> pcDiff = CheckPCDepList(ivantiDepartments, antalPCDep);
+                //List<string> difference = ivantiDepartments.Except(antalPCDep).Concat(antalPCDep.Except(ivantiDepartments)).ToList();
+                //List<string> differenceIvanti = ivantiDepartments.Where(x => !antalPCDep.Contains(x)).ToList();
+
+                SetStatusLb($"Jämför ivanti och antal pc KST...");
+
+                var diff = GetIvantiDiffDict(ivantiDepartments, antalPCDep);
+
+                SetStatusLb($"Antal KST i ivanti som saknas i Antal PC: {diff.Count.ToString()}");
+                SetStatusLb($"Skriver data till Antal PC...");
+
+                ex.WriteDataToExcel(ivantiDepartments, diff, antalPCDep);
+
+                SetStatusLb($"");
+
+                SetStatusLb($"Klart!");
+            }
+            else
+            {
+                status_lb.Items.Clear();
+                SetStatusLb($"Måste ange sökväg till filer...");
+            }
+        }
+
+        public string BackupFile(string bakFile)
+        {
             
-            //List<string> difference = ivantiDepartments.Except(antalPCDep).Concat(antalPCDep.Except(ivantiDepartments)).ToList();
+            string folderPath = @"C:\Temp\AntalPCReport_Backup";
+            string filePath = bakFile;
 
-            //List<string> differenceIvanti = ivantiDepartments.Where(x => !antalPCDep.Contains(x)).ToList();
+            SetStatusLb($"Backup fil {bakFile}");
+
+            // Check if the folder exists, and create it if it doesn't
+            if (!Directory.Exists(folderPath))
+            {
+                Directory.CreateDirectory(folderPath);
+                SetStatusLb($"Skapar mapp: {folderPath}");
+            }
+
+            // Copy the two files into the folder
+            string fileNewPath = Path.Combine(folderPath, Path.GetFileName(filePath));
+            File.Copy(filePath, fileNewPath, true);
+            SetStatusLb($"Kopierar {fileNewPath}");
+            return fileNewPath;
+
+        }
+
+        private Dictionary<string, int> GetIvantiDiffDict(Dictionary<string, int> invatiDict, Dictionary<string, int> pcDict)
+        {
+            Dictionary<string, int> diffDict = new Dictionary<string, int>();
+
+            foreach(var kvp in invatiDict)
+            {
+                if(!pcDict.ContainsKey(kvp.Key))
+                {
+                    diffDict.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            return diffDict;
+        }
+        private void SetStatusLb(string status)
+        {
+            Thread.Sleep(500);
+            status_lb.Items.Add(status);
+            
+            status_lb.Refresh();
         }
         private List<string> CheckIvantiDepList(List<string> ivantiList, List<string> pcList)
         {

@@ -1,7 +1,6 @@
 ﻿#https://superuser.com/questions/1669028/how-to-read-excel-using-powershell
 #https://github.com/dfinke/ImportExcel
 #https://adamtheautomator.com/powershell-excel/
-#https://github.com/RamblingCookieMonster/PSExcel/tree/master/PSExcel
 
 Param(
     [string]$ivantiFile = "",
@@ -18,7 +17,7 @@ Write-Host "Start!"
 $lastmonth = (Get-Date).AddMonths(-2) | Select-Object Year, Month
 $lastmonthYear = "$($lastmonth.Year)-$($lastmonth.Month)"
 $thismonth =(Get-Date) | Select-Object Year, Month
-$thismonthYear = "$($thismonth.Year)-$($thismonth.Month)"
+#$thismonthYear = "$($thismonth.Year)-$($thismonth.Month)"
 
 # Price
 $capioPrice = 380
@@ -62,10 +61,19 @@ foreach($kst in $sheetComputer)
             if($tmpKst.name -eq $kst.kst)
             {
                 
+
+                $kst.'Antal datorer' = $tmpKst.Count
+                $sheetComputer.Cells[$kst.'Månadskostn IT tjänst konto 6541'].Formula = "=[@[Antal datorer]]*Tabell2[@[2022 kost/PC/mån]]"
+                #$kst.'PC-kost per mån' = "=[@[Antal datorer]]*Tabell2[@[2022 kost/PC/mån]]"
+                #$kst.'PC-kost per år' = '=[@[Antal datorer]]*Tabell2[@[2022 kost/PC/mån]]*12'
+                #$kst.'Månadskostn IT tjänst konto 6541' = '=[@[Antal datorer]]*Tabell2[@[2022 kost/PC/mån]]'
+
+                <#
                 $kst.'Antal datorer' = $tmpKst.Count
                 $kst.'PC-kost per mån' = $tmpKst.Count * $capioPrice
                 $kst.'PC-kost per år' = ($tmpKst.Count * $capioPrice)*12
                 $kst.'Månadskostn IT tjänst konto 6541' = $tmpKst.Count * $capioPrice
+                #>
                 #Write-Host $kst.Kst $kst.'Antal datorer' $tmpKst.name $tmpKst.count
             }
         }
