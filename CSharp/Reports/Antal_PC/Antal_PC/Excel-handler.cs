@@ -17,8 +17,8 @@ namespace Antal_PC
         public string ivantiSheet { get; set; }
         public string antalPCFile { get; set; }
         public string antalPCSheet { get; set; }
-
-
+        public string totalSheet { get; set; }
+        
 
         public Dictionary<string, int> CheckDepartmentsInPCFile()
         {
@@ -100,13 +100,9 @@ namespace Antal_PC
         }
         public Dictionary<string, int> CheckDepartmentsInIvantiFile()
         {
-
             Excel.Application excel = new Excel.Application();
             Excel.Workbook workbook = excel.Workbooks.Open(this.ivantiFile);
             Excel.Worksheet sheet = workbook.Sheets[this.ivantiSheet];
-
-            //Excel.Range columnRangeDep = sheet.Range["G:G"]; // Read data from column G
-            //Excel.Range columnRangeHost = sheet.Range["O:O"]; // Read data from column O
 
             Excel.Range usedRange = sheet.UsedRange;
 
@@ -117,20 +113,9 @@ namespace Antal_PC
 
             List<string> columnDataList = new List<string>();
             Dictionary<string, int> columnData = new Dictionary<string, int>();
-
-            /*
-            System.Array valuesDepCol = (System.Array)columnRangeDep.Cells.Value;
-            System.Array valuesHostCol = (System.Array)columnRangeHost.Cells.Value;
-
-            string[] columnData2 = valuesDepCol.OfType<object>().Select(o => o.ToString()).ToArray();
-            string[] columnData = new string[valuesDepCol.Length];
-            */
-
+ 
             for (int i = 2; i <= rowCount; i++)
-            {
-                //Excel.Range cellA = (Excel.Range)columnRangeDep.Cells[i];
-                //Excel.Range cellB = (Excel.Range)columnRangeHost.Cells[i];
-
+            {          
                 object valueA = usedRange.Cells[i, columnIndexA].Value;
                 object valueB = usedRange.Cells[i, columnIndexB].Value;
 
@@ -141,13 +126,11 @@ namespace Antal_PC
                 if (valueB != null && valueB.ToString() != "")
                 {
                     string currentValue = valueA.ToString();
-
-                    
+       
                     if (!columnDataList.Contains(currentValue))
                     {
                         columnDataList.Add(currentValue);
                     }
-
                     if (columnData.ContainsKey(currentValue))
                     {
                         columnData[currentValue]++;
@@ -157,13 +140,9 @@ namespace Antal_PC
                         columnData.Add(currentValue, 1);
                     }
                 }
-
-                //Marshal.ReleaseComObject(cellA);
-                //Marshal.ReleaseComObject(cellB);
             }
 
             // Get unique values
-            //HashSet<string> uniqueValues = new HashSet<string>(columnData);
             List<string> uniqueValuesList = columnDataList.Distinct().ToList();
             // Use uniqueValues HashSet as needed
 
@@ -176,10 +155,12 @@ namespace Antal_PC
             Marshal.ReleaseComObject(excel);
 
             return columnData;
-
         }
         public void WriteDataToExcel(Dictionary<string, int> dictionary, Dictionary<string, int> diff, Dictionary<string, int> antalPCdict)
         {
+            int totalCapioComp = 0;
+            int extCompTotal = 0;
+
             // Create an Excel application object
             Excel.Application excelApp = new Excel.Application();
 
@@ -198,9 +179,17 @@ namespace Antal_PC
                 // Get the value from the first column of the current row
                 string dictkey = row.Range[4].Value.ToString();
                 string computerType = row.Range[7].Value.ToString();
-                
 
                 // Check if the value exists in the dictionary
+                if (computerType == "Extern dator")
+                {
+                    int tmpCount = Convert.ToInt32(row.Range[6].Value);
+                    try
+                    {
+                        extCompTotal += tmpCount;
+                    }
+                    catch { }
+                }
                 if (dictionary.ContainsKey(dictkey) && computerType != "Extern dator")
                 {
                     // Get the value from the dictionary
@@ -208,6 +197,8 @@ namespace Antal_PC
                     int antalPCValue = antalPCdict[dictkey];
 
                     int pcDiff = dictValue - antalPCValue;
+
+                    totalCapioComp += dictValue;
 
                     // Update the value in the column with amount of computers of the current row
                     Excel.Range cellToUpdate = row.Range[6];
@@ -233,8 +224,6 @@ namespace Antal_PC
                     {
                         cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
                     }
-
-
                 }
                 // Checks if value not exists in dictionary, == not in the ivantiFile
                 if (!dictionary.ContainsKey(dictkey) && computerType != "Extern dator")
@@ -251,7 +240,6 @@ namespace Antal_PC
 
                     cellToUpdate = row.Range[8];
                     cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
-
                 }
                 if(computerType ==  "Extern dator")
                 {
@@ -264,18 +252,17 @@ namespace Antal_PC
 
                     cellToUpdate = row.Range[8];
                     cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$3";
-
                 }
-
-
             }
-            
             // Add missing key to table
             foreach (var kvp in diff)
             {
                 Excel.ListRow newRow = table.ListRows.Add();
                 newRow.Range[4].Value = kvp.Key;
                 newRow.Range[6].Value = kvp.Value;
+
+                totalCapioComp += kvp.Value;
+
                 newRow.Range[7].Value = "Capio dator";
                 Excel.Range cellToUpdate = newRow.Range[6];
                 cellToUpdate.Interior.Color = System.Drawing.ColorTranslator.ToOle(System.Drawing.Color.Red);
@@ -289,17 +276,14 @@ namespace Antal_PC
                 cellToUpdate = newRow.Range[8];
                 cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
             }
-            
+            //Update total sheet
+            UpdateTotalSheet(workbook, totalCapioComp, extCompTotal);
+
             // Save the workbook
             workbook.Save();
 
-            // Close the workbook and Excel application objects
-            //workbook.Close();
             excelApp.Visible = true;
-            //excelApp.Quit();
-
         }
-
         public string CheckIfDictionaryKeyExists(Dictionary<string, int> dictionary, string value)
         {
             string kst = null;
@@ -319,8 +303,30 @@ namespace Antal_PC
             }
             return kst;
         }
+        public void UpdateTotalSheet(Excel.Workbook workbook, int totalCapioComp, int extCompTotal)
+        {
+            // Get the worksheet containing the table
+            Excel.Worksheet worksheet = workbook.Worksheets[this.totalSheet];
 
-    }
+            // Get a reference to the table
+            Excel.ListObject table = worksheet.ListObjects["Totaltabell"];
 
-  
+            // Loop through the table rows
+            foreach (Excel.ListRow row in table.ListRows)
+            {
+                Excel.Range cellCheck = row.Range[1];
+
+                if (cellCheck.Value.ToString() == "Capio dator")
+                {
+                    Excel.Range cellToUpdate = row.Range[4];
+                    cellToUpdate.Value = totalCapioComp;
+                }
+                if (cellCheck.Value.ToString() == "Extern dator")
+                {
+                    Excel.Range cellToUpdate = row.Range[4];
+                    cellToUpdate.Value = extCompTotal;
+                }
+            }
+        }
+    } 
 }

@@ -47,6 +47,7 @@ namespace Antal_PC
 
                 ex.antalPCFile = BackupFile(textBox2.Text);
                 ex.antalPCSheet = "Innevarnde Månad";
+                ex.totalSheet = "Total";
                 SetStatusLb($"Öppnar {ex.antalPCFile}");
                 SetStatusLb($"Sheet är '{ex.antalPCSheet}'");
                 SetStatusLb($"Bearbetar Antal PC data...");
@@ -114,14 +115,12 @@ namespace Antal_PC
                     diffDict.Add(kvp.Key, kvp.Value);
                 }
             }
-
             return diffDict;
         }
         private void SetStatusLb(string status)
         {
             Thread.Sleep(500);
             status_lb.Items.Add(status);
-            
             status_lb.Refresh();
         }
         private List<string> CheckIvantiDepList(List<string> ivantiList, List<string> pcList)
