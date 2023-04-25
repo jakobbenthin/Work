@@ -275,6 +275,9 @@ namespace Antal_PC
 
                 cellToUpdate = newRow.Range[8];
                 cellToUpdate.Value = "=[@[Antal datorer]]*Total!$C$2";
+
+                cellToUpdate = newRow.Range[12];
+                cellToUpdate.Value = 0;
             }
             //Update total sheet
             UpdateTotalSheet(workbook, totalCapioComp, extCompTotal);
